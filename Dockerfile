@@ -5,7 +5,7 @@ WORKDIR /app
 # Tell the container which port to use
 ENV PORT=8080
 
-COPY . .
+COPY templates/ templates/
 
 RUN pip install -r requirements.txt
 
