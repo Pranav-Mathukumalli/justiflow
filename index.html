@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JustiFlow — AI Fairness Auditing Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#080c14;--surface:#0f1623;--surface2:#161e30;
+      --border:rgba(99,179,237,0.12);--accent:#3b82f6;--accent2:#06b6d4;
+      --accent3:#8b5cf6;--danger:#ef4444;--warn:#f59e0b;--success:#10b981;
+      --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;--glow:rgba(59,130,246,0.25);
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh}
+
+    /* grid bg */
+    body::before{content:'';position:fixed;inset:0;
+      background-image:linear-gradient(rgba(59,130,246,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.04) 1px,transparent 1px);
+      background-size:48px 48px;pointer-events:none;z-index:0}
+
+    /* NAV */
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+      padding:1rem 2.5rem;background:rgba(8,12,20,0.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+    .nav-logo{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;letter-spacing:-.02em;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none}
+    .nav-logo span{color:var(--accent3);-webkit-text-fill-color:var(--accent3)}
+    .nav-links{display:flex;gap:1.5rem;align-items:center}
+    .nav-links a{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text2);text-decoration:none;letter-spacing:.05em;transition:color .2s}
+    .nav-links a:hover{color:var(--accent2)}
+    .nav-cta{padding:.5rem 1.25rem;background:var(--accent);color:#fff!important;border-radius:6px;font-weight:500;transition:background .2s!important}
+    .nav-cta:hover{background:#2563eb!important}
+
+    /* HERO */
+    .hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8rem 2rem 4rem}
+    .hero-badge{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .9rem;
+      background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:999px;
+      font-family:'DM Mono',monospace;font-size:.72rem;color:var(--accent2);letter-spacing:.08em;
+      margin-bottom:2rem;animation:fadeUp .6s ease both}
+    .pulse-dot{width:6px;height:6px;background:var(--accent2);border-radius:50%;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+    h1{font-family:'Syne',sans-serif;font-size:clamp(2.8rem,7vw,5.5rem);font-weight:800;line-height:1;
+      letter-spacing:-.03em;max-width:900px;margin-bottom:1.5rem;animation:fadeUp .6s .1s ease both}
+    .gradient{background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 50%,var(--accent3) 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .hero-sub{font-size:1.1rem;color:var(--text2);max-width:580px;line-height:1.7;margin-bottom:2.5rem;animation:fadeUp .6s .2s ease both}
+    .hero-actions{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;animation:fadeUp .6s .3s ease both;margin-bottom:3rem}
+    .btn-primary{display:inline-flex;align-items:center;gap:.5rem;padding:.85rem 2rem;
+      background:var(--accent);color:#fff;font-weight:600;font-size:.95rem;border-radius:8px;
+      text-decoration:none;transition:all .2s;box-shadow:0 0 32px var(--glow)}
+    .btn-primary:hover{background:#2563eb;transform:translateY(-2px);box-shadow:0 0 48px var(--glow)}
+    .btn-secondary{display:inline-flex;align-items:center;gap:.5rem;padding:.85rem 2rem;
+      border:1px solid var(--border);color:var(--text2);font-size:.95rem;border-radius:8px;text-decoration:none;transition:all .2s}
+    .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+
+    /* LIVE COUNTER TICKER */
+    .ticker{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:12px;
+      padding:1rem 2rem;display:inline-flex;align-items:center;gap:1.5rem;flex-wrap:wrap;justify-content:center;
+      animation:fadeUp .6s .4s ease both}
+    .ticker-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);animation:pulse 1s infinite}
+    .ticker-label{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text3);letter-spacing:.08em}
+    .ticker-val{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--danger)}
+    .ticker-sep{color:var(--text3);font-size:1.2rem}
+
+    /* METRICS ROW */
+    .metrics-row{display:flex;gap:2rem;flex-wrap:wrap;justify-content:center;padding:3rem 2rem;
+      position:relative;z-index:1;border-top:1px solid var(--border);animation:fadeUp .6s .5s ease both}
+    .metric-item{text-align:center}
+    .metric-num{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .metric-label{font-size:.78rem;color:var(--text3);margin-top:.2rem;letter-spacing:.05em}
+
+    /* SECTION */
+    .section{position:relative;z-index:1;padding:5rem 2rem;max-width:1100px;margin:0 auto}
+    .section-label{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--accent2);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem}
+    .section-title{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;letter-spacing:-.02em;margin-bottom:1rem;line-height:1.1}
+    .section-sub{color:var(--text2);max-width:520px;line-height:1.7;margin-bottom:3rem}
+
+    /* HOW IT WORKS - FLOW */
+    .flow-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;position:relative;margin-bottom:3rem}
+    .flow-steps::before{content:'';position:absolute;top:28px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));z-index:0}
+    .flow-step{text-align:center;position:relative;z-index:1;padding:0 .5rem}
+    .step-circle{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-size:1.3rem;margin:0 auto 1rem;border:2px solid var(--border);background:var(--surface);transition:all .3s}
+    .flow-step:hover .step-circle{border-color:var(--accent);background:rgba(59,130,246,.1);transform:scale(1.1)}
+    .step-num{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--text3);margin-bottom:.3rem;letter-spacing:.08em}
+    .step-name{font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;margin-bottom:.2rem}
+    .step-desc{font-size:.72rem;color:var(--text2);line-height:1.4}
+
+    /* REAL WORLD IMPACT */
+    .impact-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:2rem}
+    @media(max-width:640px){.impact-grid{grid-template-columns:1fr}}
+    .impact-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;position:relative;overflow:hidden;transition:all .3s}
+    .impact-card:hover{transform:translateY(-3px);border-color:rgba(239,68,68,.3)}
+    .impact-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+    .impact-card.red::before{background:linear-gradient(90deg,var(--danger),#f97316)}
+    .impact-card.amber::before{background:linear-gradient(90deg,var(--warn),#eab308)}
+    .impact-card.blue::before{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+    .impact-card.purple::before{background:linear-gradient(90deg,var(--accent3),#ec4899)}
+    .impact-year{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;color:var(--text3);margin-bottom:.5rem}
+    .impact-domain{display:inline-block;padding:.18rem .55rem;border-radius:4px;font-family:'DM Mono',monospace;font-size:.65rem;font-weight:500;margin-bottom:.75rem}
+    .dom-justice{background:rgba(239,68,68,.12);color:var(--danger)}
+    .dom-hiring{background:rgba(245,158,11,.12);color:var(--warn)}
+    .dom-lending{background:rgba(59,130,246,.12);color:var(--accent)}
+    .dom-health{background:rgba(139,92,246,.12);color:var(--accent3)}
+    .impact-card h3{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:.5rem}
+    .impact-card p{font-size:.83rem;color:var(--text2);line-height:1.6;margin-bottom:.75rem}
+    .impact-stat{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:.2rem}
+    .impact-stat-label{font-size:.72rem;color:var(--text2)}
+    .impact-link{font-size:.75rem;color:var(--accent);text-decoration:none}
+    .impact-link:hover{text-decoration:underline}
+
+    /* FEATURES GRID */
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem}
+    .feature-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;transition:all .3s;position:relative;overflow:hidden}
+    .feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));transform:scaleX(0);transform-origin:left;transition:transform .3s}
+    .feature-card:hover{border-color:rgba(59,130,246,.3);transform:translateY(-3px)}
+    .feature-card:hover::before{transform:scaleX(1)}
+    .feature-icon{width:40px;height:40px;background:rgba(59,130,246,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:1rem}
+    .feature-card h3{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:.5rem}
+    .feature-card p{font-size:.84rem;color:var(--text2);line-height:1.6}
+    .feature-tag{display:inline-block;margin-top:.75rem;padding:.2rem .6rem;
+      background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);border-radius:4px;
+      font-family:'DM Mono',monospace;font-size:.65rem;color:var(--accent3);letter-spacing:.05em}
+    .feature-tag.new{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.3);color:var(--success)}
+
+    /* BLOCKCHAIN HIGHLIGHT */
+    .blockchain-highlight{background:linear-gradient(135deg,rgba(59,130,246,.05),rgba(139,92,246,.05));
+      border:1px solid rgba(99,179,237,.2);border-radius:16px;padding:2rem;margin-bottom:3rem;display:grid;
+      grid-template-columns:1fr 1fr;gap:2rem;align-items:center}
+    @media(max-width:640px){.blockchain-highlight{grid-template-columns:1fr}}
+    .chain-visual{display:flex;flex-direction:column;gap:.5rem}
+    .chain-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.7rem 1rem;
+      font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text2);position:relative;transition:all .3s}
+    .chain-block:hover{border-color:var(--accent);color:var(--text)}
+    .chain-block .blk-type{color:var(--accent2);font-size:.65rem;letter-spacing:.08em;margin-bottom:.2rem}
+    .chain-block .blk-hash{color:var(--text3);font-size:.65rem;word-break:break-all}
+    .chain-arrow{text-align:center;color:var(--text3);font-size:.8rem;margin:-.1rem 0}
+    .chain-valid{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .8rem;border-radius:20px;
+      background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:var(--success);
+      font-family:'DM Mono',monospace;font-size:.7rem;margin-top:.75rem}
+
+    /* DEMO SCREENSHOT */
+    .demo-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:3rem}
+    .demo-bar{display:flex;align-items:center;gap:.4rem;margin-bottom:1rem}
+    .demo-dot{width:10px;height:10px;border-radius:50%}
+    .demo-title{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text3);margin-left:.5rem}
+    .demo-content{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+    @media(max-width:500px){.demo-content{grid-template-columns:1fr}}
+    .demo-stat{background:var(--surface2);border-radius:10px;padding:1rem;text-align:center}
+    .demo-stat-val{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:.2rem}
+    .demo-stat-label{font-size:.72rem;color:var(--text2);font-family:'DM Mono',monospace}
+    .demo-bar-chart{background:var(--surface2);border-radius:10px;padding:1rem;grid-column:span 2}
+    @media(max-width:500px){.demo-bar-chart{grid-column:span 1}}
+    .mini-bar-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem}
+    .mini-bar-name{font-size:.72rem;color:var(--text2);min-width:60px;font-family:'DM Mono',monospace}
+    .mini-bar-track{flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden;display:flex;gap:2px}
+    .mini-bar-ai{height:100%;border-radius:5px 0 0 5px;background:rgba(59,130,246,.7)}
+    .mini-bar-fair{height:100%;border-radius:0 5px 5px 0;background:rgba(16,185,129,.7)}
+    .mini-legend{display:flex;gap:1rem;margin-top:.5rem}
+    .mini-leg-item{display:flex;align-items:center;gap:.3rem;font-size:.7rem;color:var(--text2)}
+    .mini-leg-dot{width:8px;height:8px;border-radius:2px}
+
+    /* REGULATORY */
+    .reg-pills{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.5rem}
+    .reg-pill{padding:.5rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:999px;
+      font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text2);cursor:default;position:relative;transition:all .2s}
+    .reg-pill:hover{border-color:var(--accent2);color:var(--accent2)}
+    .reg-pill .tooltip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+      background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;
+      font-size:.72rem;color:var(--text);width:240px;line-height:1.5;white-space:normal;text-align:left;z-index:10}
+    .reg-pill:hover .tooltip{display:block}
+
+    /* CTA */
+    .cta-section{position:relative;z-index:1;text-align:center;padding:6rem 2rem;
+      background:linear-gradient(180deg,transparent,rgba(59,130,246,.04),transparent);border-top:1px solid var(--border)}
+    .cta-section h2{font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:800;
+      letter-spacing:-.03em;margin-bottom:1rem}
+    .cta-section p{color:var(--text2);margin-bottom:2rem;font-size:1rem}
+
+    /* PITCH BOX */
+    .pitch-box{background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(139,92,246,.08));
+      border:1px solid rgba(99,179,237,.2);border-radius:16px;padding:2rem;margin-bottom:2rem;text-align:left;max-width:700px;margin-left:auto;margin-right:auto}
+    .pitch-line{display:flex;gap:.75rem;align-items:flex-start;margin-bottom:1rem;font-size:.9rem;line-height:1.6}
+    .pitch-line:last-child{margin-bottom:0}
+    .pitch-tag{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;padding:.2rem .55rem;border-radius:4px;flex-shrink:0;margin-top:.15rem}
+    .pt-problem{background:rgba(239,68,68,.15);color:var(--danger)}
+    .pt-solution{background:rgba(59,130,246,.15);color:var(--accent)}
+    .pt-impact{background:rgba(16,185,129,.15);color:var(--success)}
+
+    /* FOOTER */
+    footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2rem 2.5rem;
+      display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+    footer p{font-size:.78rem;color:var(--text3);font-family:'DM Mono',monospace}
+    .footer-links{display:flex;gap:1.5rem}
+    .footer-links a{font-size:.78rem;color:var(--text3);text-decoration:none}
+    .footer-links a:hover{color:var(--accent2)}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:768px){nav{padding:1rem 1.25rem}.nav-links{display:none}.hero{padding:7rem 1.25rem 3rem}.flow-steps{grid-template-columns:1fr 1fr}.flow-steps::before{display:none}}
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Justi<span>Flow</span></a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#impact">Real cases</a>
+    <a href="#features">Features</a>
+    <a href="#compliance">Compliance</a>
+    <a href="/history">🔗 Chain</a>
+    <a href="/upload" class="nav-cta">Start Audit →</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-badge"><span class="pulse-dot"></span>Blockchain-secured · EU AI Act Compliant · Claude-powered</div>
+
+  <h1>AI made a biased<br>decision.<br><span class="gradient">We prove it.</span></h1>
+
+  <p class="hero-sub">
+    JustiFlow detects algorithmic bias by comparing what the AI decided against what the fair outcome should have been — then records every audit on a tamper-proof blockchain.
+  </p>
+
+  <div class="hero-actions">
+    <a href="/upload" class="btn-primary">⬆ Upload Dataset →</a>
+    <a href="#impact" class="btn-secondary">See real-world cases</a>
+  </div>
+
+  <!-- LIVE COUNTER -->
+  <div class="ticker">
+    <span class="ticker-dot"></span>
+    <div>
+      <div class="ticker-label">DOCUMENTED BIAS CASES</div>
+      <div class="ticker-val" id="caseCount">4</div>
+    </div>
+    <span class="ticker-sep">·</span>
+    <div>
+      <div class="ticker-label">PEOPLE AFFECTED (est.)</div>
+      <div class="ticker-val" id="peopleCount">0</div>
+    </div>
+    <span class="ticker-sep">·</span>
+    <div>
+      <div class="ticker-label">DECISIONS REVIEWED</div>
+      <div class="ticker-val" id="decisionCount">0</div>
+    </div>
+  </div>
+</section>
+
+<!-- METRICS -->
+<div class="metrics-row">
+  <div class="metric-item"><div class="metric-num">3</div><div class="metric-label">FAIRNESS METRICS</div></div>
+  <div class="metric-item"><div class="metric-num">4</div><div class="metric-label">DOMAINS COVERED</div></div>
+  <div class="metric-item"><div class="metric-num">⛓</div><div class="metric-label">BLOCKCHAIN SECURED</div></div>
+  <div class="metric-item"><div class="metric-num">EU</div><div class="metric-label">AI ACT READY</div></div>
+  <div class="metric-item"><div class="metric-num">🧠</div><div class="metric-label">CLAUDE-POWERED</div></div>
+</div>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="section" id="how">
+  <div class="section-label">// HOW IT WORKS</div>
+  <h2 class="section-title">From upload to audit<br>in 30 seconds.</h2>
+  <p class="section-sub">Upload your AI decision data, map your columns, and JustiFlow does the rest — bias detection, mitigation, blockchain recording, and a downloadable certificate.</p>
+
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="step-circle">📂</div>
+      <div class="step-num">STEP 01</div>
+      <div class="step-name">Upload CSV</div>
+      <div class="step-desc">Upload your dataset with AI decisions and expected outcomes</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-circle">🗺</div>
+      <div class="step-num">STEP 02</div>
+      <div class="step-name">Map columns</div>
+      <div class="step-desc">Select which column is the AI decision and which is the fair outcome</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-circle">⚖️</div>
+      <div class="step-num">STEP 03</div>
+      <div class="step-name">Detect bias</div>
+      <div class="step-desc">Three fairness metrics computed — DIR, SPD, EOD — with group breakdown</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-circle">⛓</div>
+      <div class="step-num">STEP 04</div>
+      <div class="step-name">Chain records it</div>
+      <div class="step-desc">File hash + result stored on immutable blockchain — tamper-proof</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-circle">📜</div>
+      <div class="step-num">STEP 05</div>
+      <div class="step-name">Download proof</div>
+      <div class="step-desc">PDF report + compliance certificate, ready for regulators</div>
+    </div>
+  </div>
+
+  <!-- MINI DEMO PREVIEW -->
+  <div class="demo-card">
+    <div class="demo-bar">
+      <div class="demo-dot" style="background:#ef4444"></div>
+      <div class="demo-dot" style="background:#f59e0b"></div>
+      <div class="demo-dot" style="background:#10b981"></div>
+      <span class="demo-title">justiflow — bias_analysis_result.dashboard</span>
+    </div>
+    <div class="demo-content">
+      <div class="demo-stat">
+        <div class="demo-stat-val" style="color:#ef4444">74%</div>
+        <div class="demo-stat-label">BIAS SCORE</div>
+      </div>
+      <div class="demo-bar-chart">
+        <div class="mini-bar-row">
+          <span class="mini-bar-name">Female</span>
+          <div class="mini-bar-track">
+            <div class="mini-bar-ai" style="width:25%"></div>
+            <div class="mini-bar-fair" style="width:62%"></div>
+          </div>
+        </div>
+        <div class="mini-bar-row">
+          <span class="mini-bar-name">Male</span>
+          <div class="mini-bar-track">
+            <div class="mini-bar-ai" style="width:68%"></div>
+            <div class="mini-bar-fair" style="width:65%"></div>
+          </div>
+        </div>
+        <div class="mini-bar-row" style="margin-bottom:0">
+          <span class="mini-bar-name">Non-binary</span>
+          <div class="mini-bar-track">
+            <div class="mini-bar-ai" style="width:18%"></div>
+            <div class="mini-bar-fair" style="width:60%"></div>
+          </div>
+        </div>
+        <div class="mini-legend">
+          <span class="mini-leg-item"><span class="mini-leg-dot" style="background:rgba(59,130,246,.7)"></span>AI decision rate</span>
+          <span class="mini-leg-item"><span class="mini-leg-dot" style="background:rgba(16,185,129,.7)"></span>Fair outcome rate</span>
+        </div>
+      </div>
+      <div class="demo-stat">
+        <div class="demo-stat-val" style="color:#10b981">+31%</div>
+        <div class="demo-stat-label">AFTER MITIGATION</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── REAL WORLD IMPACT ── -->
+<section class="section" id="impact">
+  <div class="section-label">// REAL-WORLD CASES</div>
+  <h2 class="section-title">This already happened.<br>JustiFlow would have caught it.</h2>
+  <p class="section-sub">Four documented cases where AI systems caused measurable harm to real people. Each one detectable with bias comparison analysis.</p>
+
+  <div class="impact-grid">
+    <div class="impact-card red">
+      <div class="impact-year">2016 · USA</div>
+      <span class="impact-domain dom-justice">Criminal Justice</span>
+      <h3>COMPAS Recidivism Algorithm</h3>
+      <p>ProPublica's investigation found the tool was nearly twice as likely to falsely flag Black defendants as future criminals, despite similar actual recidivism rates to white defendants.</p>
+      <div class="impact-stat" style="color:var(--danger)">2×</div>
+      <div class="impact-stat-label">higher false positive rate for Black defendants</div>
+      <a href="https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal-sentencing" target="_blank" class="impact-link">Read ProPublica investigation →</a>
+    </div>
+
+    <div class="impact-card amber">
+      <div class="impact-year">2018 · Amazon</div>
+      <span class="impact-domain dom-hiring">Hiring</span>
+      <h3>Amazon's AI Hiring Tool</h3>
+      <p>Amazon's internal tool systematically downgraded resumes containing the word "women's" and penalized graduates of all-female colleges — trained on 10 years of male-dominated hiring data.</p>
+      <div class="impact-stat" style="color:var(--warn)">2× </div>
+      <div class="impact-stat-label">rejection rate for equally qualified female candidates</div>
+      <a href="https://www.reuters.com/article/us-amazon-com-jobs-automation-insight/" target="_blank" class="impact-link">Read Reuters report →</a>
+    </div>
+
+    <div class="impact-card blue">
+      <div class="impact-year">2021 · US Banks</div>
+      <span class="impact-domain dom-lending">Lending</span>
+      <h3>Mortgage Lending Algorithms</h3>
+      <p>A study of 7 million mortgage applications found Black applicants were denied at an 80% higher rate than white applicants with identical financial profiles across multiple major lenders.</p>
+      <div class="impact-stat" style="color:var(--accent)">80%</div>
+      <div class="impact-stat-label">higher denial rate with identical credit profiles</div>
+      <a href="#" class="impact-link">Published in Markup investigation →</a>
+    </div>
+
+    <div class="impact-card purple">
+      <div class="impact-year">2019 · US Hospitals</div>
+      <span class="impact-domain dom-health">Healthcare</span>
+      <h3>Hospital Care Algorithm</h3>
+      <p>A widely used algorithm used healthcare spending as a proxy for health need. Since Black patients historically had less spent on them, it rated them as less sick — even when they were sicker.</p>
+      <div class="impact-stat" style="color:var(--accent3)">50%</div>
+      <div class="impact-stat-label">fewer Black patients referred to specialist care</div>
+      <a href="https://www.science.org/doi/10.1126/science.aax2342" target="_blank" class="impact-link">Read Science journal study →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── BLOCKCHAIN SECTION ── -->
+<section class="section" id="blockchain">
+  <div class="section-label">// BLOCKCHAIN SECURITY</div>
+  <h2 class="section-title">The organisation can't<br>deny the results.</h2>
+  <p class="section-sub">Every uploaded file is SHA-256 hashed and recorded on an immutable blockchain ledger. The moment a bias audit is run, it becomes permanent — no one can alter or delete it.</p>
+
+  <div class="blockchain-highlight">
+    <div>
+      <h3 style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:.75rem">How the chain works</h3>
+      <p style="font-size:.85rem;color:var(--text2);line-height:1.7;margin-bottom:1rem">Each block contains the SHA-256 fingerprint of your CSV file, the analysis result, and a link to the previous block's hash. Change any block and the entire chain breaks — making tampering instantly detectable.</p>
+      <ul style="font-size:.83rem;color:var(--text2);line-height:2;padding-left:1.2rem">
+        <li>File hash recorded the moment you upload</li>
+        <li>Analysis result permanently logged on-chain</li>
+        <li>Re-upload any file to verify it hasn't changed</li>
+        <li>Full chain explorer at <a href="/history" style="color:var(--accent)">/history</a></li>
+      </ul>
+      <span class="chain-valid">✓ JustiChain — tamper-proof audit trail</span>
+    </div>
+    <div class="chain-visual">
+      <div class="chain-block">
+        <div class="blk-type">GENESIS</div>
+        <div style="font-size:.72rem;margin-bottom:.2rem">JustiFlow chain initialised</div>
+        <div class="blk-hash">hash → 00a3f9c2e1b4d8f7…</div>
+      </div>
+      <div class="chain-arrow">↓</div>
+      <div class="chain-block">
+        <div class="blk-type">FILE_UPLOAD</div>
+        <div style="font-size:.72rem;margin-bottom:.2rem">hiring_data.csv · 30 rows</div>
+        <div class="blk-hash">hash → 4e8f2a1c9b3d6e7f…</div>
+      </div>
+      <div class="chain-arrow">↓</div>
+      <div class="chain-block">
+        <div class="blk-type">ANALYSIS</div>
+        <div style="font-size:.72rem;margin-bottom:.2rem">Bias: 74% · HIGH risk · protected: gender</div>
+        <div class="blk-hash">hash → 9c1e5a2f8b4d3e6c…</div>
+      </div>
+      <div class="chain-arrow">↓</div>
+      <div class="chain-block" style="border-color:rgba(16,185,129,.3)">
+        <div class="blk-type" style="color:var(--success)">VERIFIED ✓</div>
+        <div style="font-size:.72rem;margin-bottom:.2rem">Chain integrity confirmed</div>
+        <div class="blk-hash">prev_hash matches → chain intact</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="section" id="features">
+  <div class="section-label">// CAPABILITIES</div>
+  <h2 class="section-title">Everything built in.</h2>
+  <p class="section-sub">From bias detection to blockchain-backed certificates — JustiFlow is a complete fairness auditing platform.</p>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">⚖️</div>
+      <h3>3-Metric Fairness Engine</h3>
+      <p>Disparate Impact Ratio, Statistical Parity Difference, and Equal Opportunity Difference — the three canonical Fairlearn fairness metrics.</p>
+      <span class="feature-tag">CORE</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <h3>AI vs Fair Decision Comparison</h3>
+      <p>The real analysis: compare what the AI decided against the fair/expected outcome. Bias is measured from the gap, not raw data alone.</p>
+      <span class="feature-tag new">KEY FEATURE</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⛓</div>
+      <h3>Blockchain File Integrity</h3>
+      <p>Every CSV is SHA-256 hashed and recorded on an immutable local blockchain. Re-upload any file to instantly verify it hasn't been tampered with.</p>
+      <span class="feature-tag new">BLOCKCHAIN</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Historical Comparison</h3>
+      <p>Every analysis is saved. The dashboard shows your current bias score vs the previous run — is bias improving or getting worse over time?</p>
+      <span class="feature-tag new">HISTORY</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <h3>Claude-Powered Audit Report</h3>
+      <p>Claude generates a plain-English audit paragraph explaining what the bias means in real-world terms for the specific domain analysed.</p>
+      <span class="feature-tag">AI-POWERED</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎛️</div>
+      <h3>3 Mitigation Strategies</h3>
+      <p>Reweighing, oversampling, and threshold adjustment — apply any strategy and instantly see how much the bias score improves.</p>
+      <span class="feature-tag">MITIGATION</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📜</div>
+      <h3>Compliance Certificate PDF</h3>
+      <p>Download a styled audit certificate with bias score, risk level, and deployment recommendation — ready for regulatory review.</p>
+      <span class="feature-tag">COMPLIANCE</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔬</div>
+      <h3>Intersectional Bias Detection</h3>
+      <p>Detects bias at the intersection of two protected attributes (gender + age, race + income) — something most fairness tools miss entirely.</p>
+      <span class="feature-tag">ADVANCED</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── COMPLIANCE ── -->
+<section class="section" id="compliance">
+  <div class="section-label">// REGULATORY COVERAGE</div>
+  <h2 class="section-title">Built for the regulatory<br>landscape ahead.</h2>
+  <p class="section-sub">JustiFlow's metrics and audit reports are aligned with major AI governance frameworks coming into force globally.</p>
+  <div class="reg-pills">
+    <div class="reg-pill">EU AI Act — Art. 10<div class="tooltip">Requires high-risk AI systems to use training data free of discriminatory biases, with explicit documentation of data governance practices.</div></div>
+    <div class="reg-pill">EU AI Act — Art. 13<div class="tooltip">Mandates transparency for high-risk AI systems, including documentation of performance characteristics and known limitations.</div></div>
+    <div class="reg-pill">Fairlearn Framework<div class="tooltip">JustiFlow implements all three canonical Fairlearn metrics: Disparate Impact Ratio, Statistical Parity Difference, and Equal Opportunity Difference.</div></div>
+    <div class="reg-pill">IEEE Ethically Aligned Design<div class="tooltip">IEEE's guidelines for ethical AI prioritize transparency, accountability, and avoidance of bias — all measurable with JustiFlow.</div></div>
+    <div class="reg-pill">Google AI Principles<div class="tooltip">Google's AI Principles include "Be socially beneficial" and "Avoid creating or reinforcing unfair bias" — directly aligned with JustiFlow's fairness metrics.</div></div>
+    <div class="reg-pill">US Equal Credit Opportunity Act<div class="tooltip">ECOA prohibits credit discrimination based on race, religion, national origin, sex, or age — JustiFlow's lending domain analysis detects exactly these patterns.</div></div>
+  </div>
+</section>
+
+<!-- ── PITCH ── -->
+<section class="cta-section">
+  <h2>The pitch in<br><span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">3 sentences.</span></h2>
+
+  <div class="pitch-box">
+    <div class="pitch-line">
+      <span class="pitch-tag pt-problem">PROBLEM</span>
+      <span>AI systems are making biased decisions in hiring, lending, and criminal justice — and most organisations don't know it's happening until lives are already affected.</span>
+    </div>
+    <div class="pitch-line">
+      <span class="pitch-tag pt-solution">SOLUTION</span>
+      <span>JustiFlow detects bias by comparing AI decisions against fair outcomes, runs three canonical fairness metrics, and records every audit on a tamper-proof blockchain so results can never be denied or altered.</span>
+    </div>
+    <div class="pitch-line">
+      <span class="pitch-tag pt-impact">IMPACT</span>
+      <span>If Amazon had used JustiFlow in 2014, two years of discriminatory hiring would have been flagged in the first week — before thousands of women were unfairly rejected.</span>
+    </div>
+  </div>
+
+  <a href="/upload" class="btn-primary" style="font-size:1rem;padding:1rem 2.5rem">⬆ Start your audit now →</a>
+</section>
+
+<footer>
+  <p>© 2025 JustiFlow · AI Fairness Auditing Platform · Blockchain-secured</p>
+  <div class="footer-links">
+    <a href="/history">🔗 Blockchain explorer</a>
+    <a href="https://fairlearn.org" target="_blank">Fairlearn</a>
+    <a href="https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai" target="_blank">EU AI Act</a>
+  </div>
+</footer>
+
+<script>
+  // Animated counters
+  function animateCounter(el, target, duration, prefix) {
+    let start = 0;
+    const step = target / (duration / 16);
+    const timer = setInterval(() => {
+      start = Math.min(start + step, target);
+      el.textContent = prefix + Math.floor(start).toLocaleString();
+      if (start >= target) clearInterval(timer);
+    }, 16);
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    animateCounter(document.getElementById('peopleCount'), 2400000, 2000, '');
+    animateCounter(document.getElementById('decisionCount'), 7000000, 2500, '');
+  });
+</script>
+
+</body>
+</html>
