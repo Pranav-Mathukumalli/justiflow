@@ -27,7 +27,7 @@ import anthropic
 from blockchain import justi_chain, hash_file_bytes, hash_dataframe
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 app.secret_key = os.environ.get("SECRET_KEY", "justiflow-dev-secret-change-in-prod")
 
 UPLOAD_FOLDER = "uploads"
